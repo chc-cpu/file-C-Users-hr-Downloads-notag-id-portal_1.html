@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoTag ID Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--bg4:#222222;
+    --border:#2a2a2a;--border2:#333333;
+    --text:#e8e8e8;--text2:#888888;--text3:#555555;
+    --accent:#c8f135;--accent2:#a8d420;
+    --red:#ff4d4d;--orange:#ff9a3c;--blue:#4d9fff;--purple:#9b7bff;--green:#4dff91;
+    --sidebar:200px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;height:100vh;overflow:hidden;}
+
+  /* SIDEBAR */
+  .sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+  .logo{padding:20px 16px;border-bottom:1px solid var(--border);}
+  .logo-box{background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;padding:5px 8px;display:inline-block;margin-bottom:8px;}
+  .logo-sub{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+  .user-badge{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+  .avatar{width:24px;height:24px;background:var(--bg4);border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;}
+  .user-info .name{font-size:10px;color:var(--text2);}
+  .user-info .role{font-size:8px;color:var(--text3);background:var(--bg4);padding:1px 5px;border-radius:2px;display:inline-block;margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+  nav{padding:8px 0;flex:1;overflow-y:auto;}
+  .nav-section{padding:12px 16px 4px;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+  .nav-item{padding:8px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;border-left:2px solid transparent;}
+  .nav-item:hover{background:var(--bg3);}
+  .nav-item.active{background:var(--bg3);border-left-color:var(--accent);}
+  .nav-item.hidden-page{opacity:.3;}
+  .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+  .nav-label{font-size:10px;color:var(--text2);line-height:1.2;}
+  .nav-label span{display:block;font-size:8px;color:var(--text3);margin-top:1px;}
+  .nav-item.active .nav-label{color:var(--text);}
+  .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:8px;padding:1px 5px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;}
+  .nav-badge.warn{background:var(--orange);}
+  .nav-badge.ok{background:var(--green);color:#000;}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+  .topbar{padding:0 24px;height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;flex:1;outline:none;background:transparent;border:none;color:var(--text);border-bottom:1px solid transparent;transition:border-color .15s;}
+  .page-title:focus{border-bottom-color:var(--accent);}
+  .topbar-actions{display:flex;gap:8px;align-items:center;}
+  .btn{padding:6px 14px;font-family:'DM Mono',monospace;font-size:10px;border-radius:4px;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all .15s;}
+  .btn:hover{background:var(--bg4);color:var(--text);}
+  .btn-accent{background:var(--accent);color:#000;border-color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;}
+  .btn-accent:hover{background:var(--accent2);}
+  .btn-customize{color:var(--text3);}
+  .btn-customize:hover{color:var(--accent);border-color:var(--accent);}
+  .btn-sheet{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:10px;border-radius:4px;border:1px solid rgba(200,241,53,.3);background:rgba(200,241,53,.06);color:var(--accent);text-decoration:none;transition:all .15s;cursor:pointer;}
+  .btn-sheet:hover{background:rgba(200,241,53,.12);border-color:var(--accent);}
+  .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .content{flex:1;overflow-y:auto;padding:24px;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* COMPONENTS */
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);padding:16px;border-radius:6px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat-card.green::before{background:var(--green)}.stat-card.orange::before{background:var(--orange)}
+  .stat-card.blue::before{background:var(--blue)}.stat-card.red::before{background:var(--red)}.stat-card.accent::before{background:var(--accent)}
+  .stat-label{font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;}
+  .stat-sub{font-size:9px;color:var(--text3);margin-top:4px;}
+
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+  .section-meta{font-size:9px;color:var(--text3);margin-top:2px;}
+
+  .filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .filter-btn{padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text3);transition:all .15s;}
+  .filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,241,53,.05);}
+
+  .table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{padding:10px 14px;text-align:left;font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3);font-weight:400;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--bg3);}
+  td{padding:10px 14px;font-size:10px;color:var(--text2);vertical-align:middle;}
+  td.primary{color:var(--text);font-size:11px;}
+
+  .tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:8px;letter-spacing:1px;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:600;}
+  .tag-green{background:rgba(77,255,145,.1);color:var(--green);border:1px solid rgba(77,255,145,.2)}
+  .tag-orange{background:rgba(255,154,60,.1);color:var(--orange);border:1px solid rgba(255,154,60,.2)}
+  .tag-red{background:rgba(255,77,77,.1);color:var(--red);border:1px solid rgba(255,77,77,.2)}
+  .tag-blue{background:rgba(77,159,255,.1);color:var(--blue);border:1px solid rgba(77,159,255,.2)}
+  .tag-accent{background:rgba(200,241,53,.1);color:var(--accent);border:1px solid rgba(200,241,53,.2)}
+  .tag-gray{background:rgba(136,136,136,.1);color:var(--text3);border:1px solid rgba(136,136,136,.15)}
+
+  .row-act{font-size:9px;color:var(--text3);cursor:pointer;padding:2px 5px;border-radius:2px;border:1px solid transparent;transition:all .15s;}
+  .row-act:hover{color:var(--accent);border-color:var(--accent);}
+  .row-act.del:hover{color:var(--red);border-color:var(--red);}
+  .actions-cell{display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+  tbody tr:hover .actions-cell{opacity:1;}
+
+  .timeline{position:relative;padding-left:24px;}
+  .timeline::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--border);}
+  .timeline-item{position:relative;padding:0 0 18px 16px;}
+  .timeline-dot{position:absolute;left:-17px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg2);}
+  .timeline-dot.done{background:var(--green)}.timeline-dot.active{background:var(--accent);box-shadow:0 0 8px var(--accent)}.timeline-dot.pending{background:var(--border2)}
+  .timeline-title{font-size:11px;color:var(--text);font-family:'Syne',sans-serif;font-weight:600;}
+  .timeline-meta{font-size:9px;color:var(--text3);margin-top:2px;}
+
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+  body.density-compact td,body.density-compact th{padding:5px 10px;}
+  body.density-loose td,body.density-loose th{padding:14px 16px;}
+  body.theme-light{--bg:#f5f5f5;--bg2:#fff;--bg3:#efefef;--bg4:#e5e5e5;--border:#e0e0e0;--border2:#d0d0d0;--text:#111;--text2:#555;--text3:#999;}
+  [data-section].hidden{display:none!important;}
+
+  /* ── MODAL ── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;width:480px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;transform:translateY(16px);transition:transform .2s;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;}
+  .modal-close{cursor:pointer;font-size:18px;color:var(--text3);line-height:1;transition:color .15s;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+  /* FORM FIELDS */
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;}
+  .field input,.field select,.field textarea{background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:9px 11px;border-radius:4px;outline:none;transition:border-color .15s;width:100%;}
+  .field input:focus,.field select,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+  .field select option{background:var(--bg3);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* TYPE SELECTOR in modal */
+  .type-tabs{display:flex;gap:6px;margin-bottom:4px;}
+  .type-tab{flex:1;padding:8px;text-align:center;font-family:'DM Mono',monospace;font-size:9px;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text3);transition:all .15s;letter-spacing:.5px;}
+  .type-tab:hover,.type-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(200,241,53,.05);}
+
+  /* CUSTOMIZE PANEL */
+  .cp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .cp-overlay.open{opacity:1;pointer-events:all;}
+  .cp-panel{position:fixed;top:0;right:0;width:280px;height:100vh;background:var(--bg2);border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+  .cp-panel.open{transform:translateX(0);}
+  .cp-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .cp-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;}
+  .cp-subtitle{font-size:9px;color:var(--text3);margin-top:2px;}
+  .cp-close{cursor:pointer;font-size:18px;color:var(--text3);line-height:1;}
+  .cp-close:hover{color:var(--text);}
+  .cp-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:20px;}
+  .cp-section-label{font-size:8px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+  .cp-title-input{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;border-radius:4px;outline:none;}
+  .cp-title-input:focus{border-color:var(--accent);}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-label{font-size:10px;color:var(--text2);}
+  .toggle{position:relative;width:32px;height:18px;flex-shrink:0;}
+  .toggle input{opacity:0;width:0;height:0;position:absolute;}
+  .toggle-track{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--border2);border-radius:9px;cursor:pointer;transition:background .2s,border-color .2s;}
+  .toggle input:checked+.toggle-track{background:var(--accent);border-color:var(--accent);}
+  .toggle-thumb{position:absolute;top:3px;left:3px;width:10px;height:10px;background:#000;border-radius:50%;transition:transform .2s;pointer-events:none;}
+  .toggle input:checked~.toggle-thumb{transform:translateX(14px);}
+  .color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .color-swatch{width:100%;aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;}
+  .color-swatch:hover{transform:scale(1.1);}
+  .color-swatch.selected{border-color:#fff;}
+  .option-row{display:flex;gap:6px;}
+  .option-btn{flex:1;padding:7px 0;font-family:'DM Mono',monospace;font-size:9px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text3);transition:all .15s;text-align:center;}
+  .option-btn:hover,.option-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,241,53,.05);}
+  .cp-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+  .cp-footer .btn{flex:1;text-align:center;font-size:9px;}
+
+  .empty-state{padding:32px;text-align:center;color:var(--text3);font-size:11px;}
+
+  /* SHEET CARDS */
+  .sheet-card{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 8px;text-decoration:none;cursor:pointer;transition:all .2s;gap:6px;}
+  .sheet-card:hover{border-color:var(--accent);background:rgba(200,241,53,.04);transform:translateY(-1px);}
+  .sheet-card-icon{font-size:18px;}
+  .sheet-card-label{font-size:9px;color:var(--text);text-align:center;font-family:'Syne',sans-serif;font-weight:600;line-height:1.3;}
+  .sheet-card-sub{font-size:8px;color:var(--text3);text-align:center;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-box">NoTag</div>
+    <div class="logo-sub">Indonesia Portal</div>
+  </div>
+  <div class="user-badge">
+    <div class="avatar">NT</div>
+    <div class="user-info"><div class="name">Admin</div><div class="role">HQ</div></div>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard',this)">
+      <div class="nav-icon">⬡</div><div class="nav-label">Dashboard<span>Overview</span></div>
+    </div>
+    <div class="nav-section">Operations</div>
+    <div class="nav-item" id="nav-logistics" onclick="navigate('logistics',this)">
+      <div class="nav-icon">◎</div><div class="nav-label">Logistics<span>KR → ID</span></div><div class="nav-badge ok" id="badge-logistics">Live</div>
+    </div>
+    <div class="nav-item" id="nav-agenda" onclick="navigate('agenda',this)">
+      <div class="nav-icon">◈</div><div class="nav-label">Agenda Tracker<span>Tasks</span></div><div class="nav-badge" id="badge-agenda">5</div>
+    </div>
+    <div class="nav-section">Commerce</div>
+    <div class="nav-item" id="nav-preorder" onclick="navigate('preorder',this)">
+      <div class="nav-icon">◆</div><div class="nav-label">Pre-order<span>Purchase Orders</span></div>
+    </div>
+    <div class="nav-item" id="nav-inventory" onclick="navigate('inventory',this)">
+      <div class="nav-icon">▦</div><div class="nav-label">Inventory<span>ID Office Stock</span></div>
+    </div>
+    <div class="nav-item" id="nav-calendar" onclick="navigate('calendar',this)">
+      <div class="nav-icon">◫</div><div class="nav-label">Upload Calendar<span>Schedule</span></div><div class="nav-badge warn" id="badge-calendar">3</div>
+    </div>
+    <div class="nav-item" id="nav-finance" onclick="navigate('finance',this)">
+      <div class="nav-icon">◐</div><div class="nav-label">Finance / KPI<span>Sales & Revenue</span></div>
+    </div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <input class="page-title" id="pageTitle" value="Dashboard" onchange="saveTitle()"/>
+    <div class="topbar-actions">
+      <div class="sync-dot"></div>
+      <span style="font-size:9px;color:var(--text3)">LIVE</span>
+      <button class="btn" onclick="syncSheets()">↻ Sync</button>
+      <span id="sheetLinkBtn"></span>
+      <button class="btn btn-customize" onclick="openCustomize()">⚙ Customize</button>
+      <button class="btn btn-accent" onclick="openAddModal()">+ Add</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+
+      <!-- SHEETS HUB -->
+      <div data-section="sheets-hub" style="margin-bottom:20px">
+        <div class="section-header" style="margin-bottom:10px">
+          <div><div class="section-title">Google Sheets</div><div class="section-meta">Source of truth — click to open & edit</div></div>
+          <span style="font-size:9px;color:var(--text3)" id="last-sync-label">Last sync: —</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+          <a href="https://docs.google.com/spreadsheets/d/15W2pMtEzdBUMT8H0RTXbyanV3D_hDNpGFMiMW2nv9Fo/edit" target="_blank" class="sheet-card">
+            <div class="sheet-card-icon">📦</div>
+            <div class="sheet-card-label">발주 시트</div>
+            <div class="sheet-card-sub">Pre-order</div>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1WFfTtxlZgQ-JZcP9rSA75xV83wLRJHCY_Bgoeam9JXk/edit" target="_blank" class="sheet-card">
+            <div class="sheet-card-icon">🗄</div>
+            <div class="sheet-card-label">인니 재고 시트</div>
+            <div class="sheet-card-sub">Inventory</div>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1A2XkJHyhU3kC91O--3O5MK_Y6aLfBSMCVDBTwZ-Rkno/edit" target="_blank" class="sheet-card">
+            <div class="sheet-card-icon">🚢</div>
+            <div class="sheet-card-label">물류 패킹 리스트</div>
+            <div class="sheet-card-sub">Logistics</div>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1NcxClmbXHCufSXd26HFa9YjJMl0pdNc6Rl4A6FYo0CE/edit" target="_blank" class="sheet-card">
+            <div class="sheet-card-icon">📅</div>
+            <div class="sheet-card-label">마케팅 캘린더</div>
+            <div class="sheet-card-sub">Upload Calendar</div>
+          </a>
+          <a href="https://docs.google.com/spreadsheets/d/1gq72JmFyfBI2kRM7XcTumAZsWz_aNxqWFn7QS0wuEVY/edit" target="_blank" class="sheet-card">
+            <div class="sheet-card-icon">💰</div>
+            <div class="sheet-card-label">재무 KPI 시트</div>
+            <div class="sheet-card-sub">Finance / KPI</div>
+          </a>
+        </div>
+      </div>
+      <div data-section="logistics-stats">
+        <div class="section-header">
+          <div><div class="section-title">Logistics Status</div><div class="section-meta">KR → ID Active Shipments</div></div>
+          <span class="tag tag-blue" id="dash-shipment-count">— Shipments</span>
+        </div>
+        <div class="stats-row" id="dash-logistics-kpis" style="margin-bottom:16px"></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Tracking No.</th><th>Contents</th><th>Boxes</th><th>Departed</th><th>ETA</th><th>Status</th><th></th></tr></thead>
+          <tbody id="dash-logistics-tbody"></tbody></table>
+        </div>
+      </div>
+      <div data-section="agenda-list" style="margin-top:8px">
+        <div class="section-header">
+          <div><div class="section-title">Agenda List</div><div class="section-meta">All active tasks</div></div>
+          <div style="display:flex;gap:6px" id="dash-agenda-badges"></div>
+        </div>
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterDashAgenda('all',this)">All</button>
+          <button class="filter-btn" onclick="filterDashAgenda('KR',this)">KR Team</button>
+          <button class="filter-btn" onclick="filterDashAgenda('ID',this)">ID Team</button>
+          <button class="filter-btn" onclick="filterDashAgenda('Urgent',this)">Urgent</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Task</th><th>Assignee</th><th>Team</th><th>Priority</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody id="dash-agenda-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGISTICS -->
+    <div class="page" id="page-logistics">
+      <div data-section="logistics-kpi">
+        <div class="stats-row" id="logistics-kpi-row"></div>
+      </div>
+      <div data-section="logistics-table">
+        <div class="section-header">
+          <div class="section-title">All Shipments</div>
+          <div style="display:flex;gap:6px">
+            <button class="filter-btn active" onclick="filterLogistics('all',this)">All</button>
+            <button class="filter-btn" onclick="filterLogistics('In Transit',this)">In Transit</button>
+            <button class="filter-btn" onclick="filterLogistics('Customs',this)">Customs</button>
+            <button class="filter-btn" onclick="filterLogistics('Delivered',this)">Delivered</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Tracking No.</th><th>Contents</th><th>Boxes</th><th>Departed</th><th>ETA</th><th>Status</th><th></th></tr></thead>
+          <tbody id="logistics-tbody"></tbody></table>
+        </div>
+      </div>
+      <div data-section="logistics-timeline" id="logistics-timeline-wrap">
+        <div class="section-header"><div class="section-title" id="timeline-label">Live Tracking</div></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:20px;" id="logistics-timeline-body"></div>
+      </div>
+    </div>
+
+    <!-- AGENDA -->
+    <div class="page" id="page-agenda">
+      <div data-section="agenda-filters">
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterAgenda('all',this)">All</button>
+          <button class="filter-btn" onclick="filterAgenda('KR',this)">KR Team</button>
+          <button class="filter-btn" onclick="filterAgenda('ID',this)">ID Team</button>
+          <button class="filter-btn" onclick="filterAgenda('Urgent',this)">Urgent</button>
+          <button class="filter-btn" onclick="filterAgenda('Done',this)">Done</button>
+        </div>
+      </div>
+      <div data-section="agenda-table">
+        <div class="table-wrap">
+          <table><thead><tr><th>Task</th><th>Brand</th><th>Assignee</th><th>Priority</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody id="agenda-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR (Upload) -->
+    <div class="page" id="page-calendar">
+      <div data-section="upload-table">
+        <div class="table-wrap">
+          <table><thead><tr><th>Brand</th><th>Channel</th><th>Content</th><th>SKUs</th><th>Date</th><th>Status</th><th></th></tr></thead>
+          <tbody id="calendar-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRE-ORDER -->
+    <div class="page" id="page-preorder">
+      <div data-section="preorder-table">
+        <div class="table-wrap">
+          <table><thead><tr><th>Order ID</th><th>Brand</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody id="preorder-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="page" id="page-inventory">
+      <div data-section="inventory-kpi">
+        <div class="stats-row" id="inventory-kpi-row"></div>
+      </div>
+      <div data-section="inventory-table">
+        <div class="filter-row">
+          <button class="filter-btn active" onclick="filterInventory('all',this)">All</button>
+          <button class="filter-btn" onclick="filterInventory('OK',this)">OK</button>
+          <button class="filter-btn" onclick="filterInventory('Low',this)">Low Stock</button>
+          <button class="filter-btn" onclick="filterInventory('Out',this)">Out of Stock</button>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>SKU</th><th>Brand</th><th>Item</th><th>Size</th><th>Stock</th><th>Reorder Pt.</th><th>Status</th><th></th></tr></thead>
+          <tbody id="inventory-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div class="page" id="page-finance">
+      <div data-section="finance-kpi">
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr)" id="finance-kpi-row"></div>
+      </div>
+      <div data-section="finance-table">
+        <div class="table-wrap">
+          <table><thead><tr><th>Channel</th><th>Gross Sales</th><th>Actual Received</th><th>Diff</th><th>KPI</th><th>Achievement</th></tr></thead>
+          <tbody id="finance-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══ ADD MODAL ══ -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add Item</div>
+      <div class="modal-close" onclick="closeModal('addModal')">✕</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-accent" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMIZE PANEL -->
+<div class="cp-overlay" id="cpOverlay" onclick="closeCustomize()"></div>
+<div class="cp-panel" id="cpPanel">
+  <div class="cp-header">
+    <div><div class="cp-title">⚙ Customize</div><div class="cp-subtitle" id="cpSubtitle">Page settings</div></div>
+    <div class="cp-close" onclick="closeCustomize()">✕</div>
+  </div>
+  <div class="cp-body">
+    <div><div class="cp-section-label">Page Title</div><input class="cp-title-input" id="cpTitleInput" oninput="liveUpdateTitle(this.value)"/></div>
+    <div><div class="cp-section-label">Visible Sections</div><div id="cpSections"></div></div>
+    <div><div class="cp-section-label">Accent Color</div>
+      <div class="color-grid">
+        <div class="color-swatch selected" style="background:#c8f135" onclick="setAccent('#c8f135','#a8d420',this)"></div>
+        <div class="color-swatch" style="background:#4d9fff" onclick="setAccent('#4d9fff','#3a8fe0',this)"></div>
+        <div class="color-swatch" style="background:#ff9a3c" onclick="setAccent('#ff9a3c','#e0872a',this)"></div>
+        <div class="color-swatch" style="background:#4dff91" onclick="setAccent('#4dff91','#30e070',this)"></div>
+        <div class="color-swatch" style="background:#ff4d9f" onclick="setAccent('#ff4d9f','#e0308a',this)"></div>
+        <div class="color-swatch" style="background:#9b7bff" onclick="setAccent('#9b7bff','#7a5ae0',this)"></div>
+        <div class="color-swatch" style="background:#ffd700" onclick="setAccent('#ffd700','#e0bb00',this)"></div>
+        <div class="color-swatch" style="background:#00d4ff" onclick="setAccent('#00d4ff','#00b8e0',this)"></div>
+        <div class="color-swatch" style="background:#ff4d4d" onclick="setAccent('#ff4d4d','#e03030',this)"></div>
+        <div class="color-swatch" style="background:#fff" onclick="setAccent('#ffffff','#ccc',this)"></div>
+      </div>
+    </div>
+    <div><div class="cp-section-label">Table Density</div>
+      <div class="option-row">
+        <button class="option-btn" onclick="setDensity('compact',this)">Compact</button>
+        <button class="option-btn active" onclick="setDensity('normal',this)">Normal</button>
+        <button class="option-btn" onclick="setDensity('loose',this)">Loose</button>
+      </div>
+    </div>
+    <div><div class="cp-section-label">Theme</div>
+      <div class="option-row">
+        <button class="option-btn active" onclick="setTheme('dark',this)">Dark</button>
+        <button class="option-btn" onclick="setTheme('light',this)">Light</button>
+      </div>
+    </div>
+    <div><div class="cp-section-label">Sidebar Pages</div><div id="cpPageVisibility"></div></div>
+  </div>
+  <div class="cp-footer">
+    <button class="btn" onclick="resetPage()">↺ Reset</button>
+    <button class="btn btn-accent" onclick="closeCustomize()">Done</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  DATA STORE
+// ══════════════════════════════════════
+const DB = {
+  logistics: [
+    { id:1, tracking:'KR240422-01', contents:'MLB SS25 / Matin Kim', boxes:32, departed:'Apr 22', eta:'Apr 30', status:'Customs',
+      timeline:[
+        {label:'Order Packed — Incheon',note:'32 boxes · 148kg',state:'done'},
+        {label:'Departed ICN',note:'Apr 22 · KE627 · CJ Logistics',state:'done'},
+        {label:'Arrived CGK',note:'Apr 24 · Customs lodged',state:'done'},
+        {label:'Customs Clearance',note:'Apr 27 · In process · Est. Apr 29',state:'active'},
+        {label:'Delivery to NoTag ID Office',note:'ETA Apr 30 · South Jakarta',state:'pending'}
+      ]},
+    { id:2, tracking:'KR240428-02', contents:'BLACKYAK / Duvetica', boxes:18, departed:'Apr 28', eta:'May 5', status:'In Transit',
+      timeline:[
+        {label:'Order Packed — Incheon',note:'18 boxes · 92kg',state:'done'},
+        {label:'Departed ICN',note:'Apr 28 · KE629',state:'active'},
+        {label:'Arrived CGK',note:'',state:'pending'},
+        {label:'Customs Clearance',note:'',state:'pending'},
+        {label:'Delivery to NoTag ID Office',note:'ETA May 5',state:'pending'}
+      ]},
+    { id:3, tracking:'KR240410-03', contents:'thisisneverthat', boxes:9, departed:'Apr 10', eta:'Apr 18', status:'Delivered',
+      timeline:[
+        {label:'Order Packed',note:'9 boxes',state:'done'},
+        {label:'Departed ICN',note:'Apr 10',state:'done'},
+        {label:'Arrived CGK',note:'Apr 14',state:'done'},
+        {label:'Customs Clearance',note:'Apr 15 · Cleared',state:'done'},
+        {label:'Delivered',note:'Apr 18 · South Jakarta',state:'done'}
+      ]}
+  ],
+  agenda: [
+    {id:1,task:'Confirm Q2 pre-order with KR team',brand:'MLB, Matin Kim',assignee:'Choi / Reza',team:'KR',priority:'Urgent',due:'Apr 29',status:'In Progress'},
+    {id:2,task:'Upload MLB content to Shopee',brand:'MLB',assignee:'Yunnie',team:'ID',priority:'High',due:'Apr 28',status:'Overdue'},
+    {id:3,task:'Stock count — ID Office',brand:'All',assignee:'Tim',team:'ID',priority:'Normal',due:'May 1',status:'On Track'},
+    {id:4,task:'Negotiate May logistics cost',brand:'—',assignee:'Choi',team:'KR',priority:'Normal',due:'May 3',status:'Not Started'},
+    {id:5,task:'TikTok Shop onboarding docs',brand:'thisisneverthat',assignee:'Reza',team:'ID',priority:'High',due:'May 5',status:'Not Started'}
+  ],
+  calendar: [
+    {id:1,brand:'MLB',channel:'Shopee ID',content:'Summer Campaign',skus:12,date:'Apr 28',status:'Today'},
+    {id:2,brand:'Matin Kim',channel:'Tokopedia',content:'New Arrivals',skus:8,date:'Apr 30',status:'Upcoming'},
+    {id:3,brand:'BLACKYAK',channel:'Lazada',content:'SS25 Collection',skus:15,date:'May 2',status:'Scheduled'},
+    {id:4,brand:'thisisneverthat',channel:'TikTok Shop',content:'Collab Drop',skus:6,date:'May 8',status:'Pending'}
+  ],
+  preorder: [
+    {id:1,orderId:'PO-240428-01',brand:'MLB',item:'NY Yankees Cap — Black',qty:50,unitPrice:'KRW 45,000',total:'KRW 2,250,000',status:'Pending'},
+    {id:2,orderId:'PO-240428-02',brand:'Matin Kim',item:'Washed Denim Jacket',qty:20,unitPrice:'KRW 189,000',total:'KRW 3,780,000',status:'Pending'},
+    {id:3,orderId:'PO-240420-05',brand:'BLACKYAK',item:'Alpine Jacket — Navy',qty:15,unitPrice:'KRW 320,000',total:'KRW 4,800,000',status:'Confirmed'},
+    {id:4,orderId:'PO-240415-03',brand:'thisisneverthat',item:'ATNA Logo Tee',qty:30,unitPrice:'KRW 69,000',total:'KRW 2,070,000',status:'Shipped'}
+  ],
+  inventory: [
+    {id:1,sku:'MLB-CAP-001-BK',brand:'MLB',item:'NY Yankees Cap',size:'Free',stock:32,reorder:10,status:'OK'},
+    {id:2,sku:'MK-JKT-003-M',brand:'Matin Kim',item:'Washed Denim Jacket',size:'M',stock:3,reorder:5,status:'Low'},
+    {id:3,sku:'MK-JKT-003-L',brand:'Matin Kim',item:'Washed Denim Jacket',size:'L',stock:0,reorder:5,status:'Out'},
+    {id:4,sku:'BY-JKT-ALN-L',brand:'BLACKYAK',item:'Alpine Jacket Navy',size:'L',stock:8,reorder:5,status:'OK'},
+    {id:5,sku:'TNT-TEE-ATNA-XL',brand:'thisisneverthat',item:'ATNA Logo Tee',size:'XL',stock:4,reorder:8,status:'Low'}
+  ],
+  finance: [
+    {id:1,channel:'Shopee ID',gross:'IDR 21M',received:'IDR 18.5M',diff:'IDR 2.5M',kpi:'IDR 23M',pct:'91.3%'},
+    {id:2,channel:'Tokopedia',gross:'IDR 15M',received:'IDR 13M',diff:'IDR 2M',kpi:'IDR 18M',pct:'83.3%'},
+    {id:3,channel:'Lazada',gross:'IDR 8M',received:'IDR 7M',diff:'IDR 1M',kpi:'IDR 9M',pct:'88.9%'},
+    {id:4,channel:'TikTok Shop',gross:'IDR 4M',received:'IDR 3.5M',diff:'IDR 0.5M',kpi:'IDR 5M',pct:'80%'}
+  ]
+};
+
+let nextId = {logistics:10,agenda:10,calendar:10,preorder:10,inventory:10,finance:10};
+let editingId = null;
+let editingTable = null;
+let currentPage = 'dashboard';
+let logisticsFilter = 'all';
+
+// ══════════════════════════════════════
+//  TAG HELPERS
+// ══════════════════════════════════════
+function statusTag(s){
+  const map={
+    'Customs':'tag-orange','In Transit':'tag-blue','Delivered':'tag-green','Pending':'tag-orange',
+    'Today':'tag-red','Upcoming':'tag-orange','Scheduled':'tag-blue','Confirmed':'tag-green','Shipped':'tag-blue',
+    'In Progress':'tag-orange','Overdue':'tag-red','On Track':'tag-accent','Not Started':'tag-gray','Done':'tag-green',
+    'Urgent':'tag-red','High':'tag-orange','Normal':'tag-blue','OK':'tag-green','Low':'tag-red','Out':'tag-red'
+  };
+  return `<span class="tag ${map[s]||'tag-gray'}">${s}</span>`;
+}
+function teamTag(t){ return t==='KR'?'<span class="tag tag-gray">KR</span>':'<span class="tag tag-green">ID</span>'; }
+
+// ══════════════════════════════════════
+//  RENDER FUNCTIONS
+// ══════════════════════════════════════
+function renderLogistics(filter='all'){
+  logisticsFilter=filter;
+  const rows = filter==='all' ? DB.logistics : DB.logistics.filter(r=>r.status===filter);
+
+  // KPI
+  const inTransit=DB.logistics.filter(r=>r.status==='In Transit').length;
+  const customs=DB.logistics.filter(r=>r.status==='Customs').length;
+  const delivered=DB.logistics.filter(r=>r.status==='Delivered').length;
+  document.getElementById('logistics-kpi-row').innerHTML=`
+    <div class="stat-card blue"><div class="stat-label">In Transit</div><div class="stat-value">${inTransit}</div><div class="stat-sub">ICN → CGK</div></div>
+    <div class="stat-card orange"><div class="stat-label">In Customs</div><div class="stat-value">${customs}</div><div class="stat-sub">Bea Cukai</div></div>
+    <div class="stat-card green"><div class="stat-label">Delivered</div><div class="stat-value">${delivered}</div><div class="stat-sub">This month</div></div>`;
+
+  // Table
+  document.getElementById('logistics-tbody').innerHTML = rows.length ? rows.map(r=>`
+    <tr>
+      <td class="primary">${r.tracking}</td><td>${r.contents}</td><td>${r.boxes}</td>
+      <td>${r.departed}</td><td>${r.eta}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="selectTimeline(${r.id})">Track</span>
+        <span class="row-act" onclick="openEdit('logistics',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('logistics',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="7" class="empty-state">No shipments found.</td></tr>`;
+
+  // Timeline — show first active or first
+  const active = DB.logistics.find(r=>r.status==='Customs'||r.status==='In Transit') || DB.logistics[0];
+  if(active) selectTimeline(active.id);
+
+  // Dashboard mirror
+  document.getElementById('dash-shipment-count').textContent = DB.logistics.filter(r=>r.status!=='Delivered').length + ' Active';
+  document.getElementById('dash-logistics-kpis').innerHTML=`
+    <div class="stat-card blue"><div class="stat-label">In Transit</div><div class="stat-value">${inTransit}</div><div class="stat-sub">ICN → CGK</div></div>
+    <div class="stat-card orange"><div class="stat-label">In Customs</div><div class="stat-value">${customs}</div><div class="stat-sub">Bea Cukai</div></div>
+    <div class="stat-card green"><div class="stat-label">Delivered</div><div class="stat-value">${delivered}</div><div class="stat-sub">This month</div></div>`;
+  document.getElementById('dash-logistics-tbody').innerHTML = DB.logistics.map(r=>`
+    <tr>
+      <td class="primary">${r.tracking}</td><td>${r.contents}</td><td>${r.boxes}</td>
+      <td>${r.departed}</td><td>${r.eta}</td><td>${statusTag(r.status)}</td>
+    </tr>`).join('');
+}
+
+function selectTimeline(id){
+  const r = DB.logistics.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('timeline-label').textContent = 'Live Tracking — '+r.tracking;
+  document.getElementById('logistics-timeline-body').innerHTML = `<div class="timeline">${r.timeline.map(t=>`
+    <div class="timeline-item">
+      <div class="timeline-dot ${t.state}"></div>
+      <div class="timeline-title">${t.label}</div>
+      ${t.note?`<div class="timeline-meta">${t.note}</div>`:''}
+    </div>`).join('')}</div>`;
+}
+
+function renderAgenda(filter='all'){
+  const rows = filter==='all' ? DB.agenda
+    : filter==='Done' ? DB.agenda.filter(r=>r.status==='Done')
+    : filter==='Urgent' ? DB.agenda.filter(r=>r.priority==='Urgent')
+    : DB.agenda.filter(r=>r.team===filter);
+
+  const html = rows.length ? rows.map(r=>`
+    <tr>
+      <td class="primary">${r.task}</td><td>${r.brand}</td><td>${teamTag(r.team)}</td>
+      <td>${statusTag(r.priority)}</td><td>${r.due}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="openEdit('agenda',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('agenda',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('') : `<tr><td colspan="7" class="empty-state">No tasks found.</td></tr>`;
+
+  document.getElementById('agenda-tbody').innerHTML = html;
+  document.getElementById('badge-agenda').textContent = DB.agenda.filter(r=>r.status!=='Done').length;
+
+  // Dashboard mirror
+  const overdue=DB.agenda.filter(r=>r.status==='Overdue').length;
+  const inprog=DB.agenda.filter(r=>r.status==='In Progress').length;
+  document.getElementById('dash-agenda-badges').innerHTML=
+    (overdue?`<span class="tag tag-red">${overdue} Overdue</span>`:'') +
+    (inprog?`<span class="tag tag-orange">${inprog} In Progress</span>`:'');
+  document.getElementById('dash-agenda-tbody').innerHTML = DB.agenda.map(r=>`
+    <tr>
+      <td class="primary">${r.task}</td><td>${r.assignee}</td><td>${teamTag(r.team)}</td>
+      <td>${statusTag(r.priority)}</td><td>${r.due}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="openEdit('agenda',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('agenda',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('');
+}
+
+function renderCalendar(){
+  document.getElementById('calendar-tbody').innerHTML = DB.calendar.map(r=>`
+    <tr>
+      <td class="primary">${r.brand}</td><td>${r.channel}</td><td>${r.content}</td>
+      <td>${r.skus}</td><td>${r.date}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="openEdit('calendar',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('calendar',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('') || `<tr><td colspan="7" class="empty-state">No uploads scheduled.</td></tr>`;
+  document.getElementById('badge-calendar').textContent = DB.calendar.filter(r=>r.status==='Today'||r.status==='Upcoming').length;
+}
+
+function renderPreorder(){
+  document.getElementById('preorder-tbody').innerHTML = DB.preorder.map(r=>`
+    <tr>
+      <td class="primary">${r.orderId}</td><td>${r.brand}</td><td>${r.item}</td>
+      <td>${r.qty}</td><td>${r.unitPrice}</td><td>${r.total}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="openEdit('preorder',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('preorder',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('') || `<tr><td colspan="8" class="empty-state">No orders.</td></tr>`;
+}
+
+function renderInventory(filter='all'){
+  const rows = filter==='all' ? DB.inventory : DB.inventory.filter(r=>r.status===filter);
+  const ok=DB.inventory.filter(r=>r.status==='OK').length;
+  const low=DB.inventory.filter(r=>r.status==='Low').length;
+  const out=DB.inventory.filter(r=>r.status==='Out').length;
+  document.getElementById('inventory-kpi-row').innerHTML=`
+    <div class="stat-card green"><div class="stat-label">Total SKUs</div><div class="stat-value">${DB.inventory.length}</div></div>
+    <div class="stat-card red"><div class="stat-label">Low Stock</div><div class="stat-value">${low}</div></div>
+    <div class="stat-card orange"><div class="stat-label">Out of Stock</div><div class="stat-value">${out}</div></div>`;
+  document.getElementById('inventory-tbody').innerHTML = rows.map(r=>`
+    <tr>
+      <td class="primary">${r.sku}</td><td>${r.brand}</td><td>${r.item}</td>
+      <td>${r.size}</td><td>${r.stock}</td><td>${r.reorder}</td><td>${statusTag(r.status)}</td>
+      <td><div class="actions-cell">
+        <span class="row-act" onclick="openEdit('inventory',${r.id})">Edit</span>
+        <span class="row-act del" onclick="deleteRow('inventory',${r.id})">Del</span>
+      </div></td>
+    </tr>`).join('') || `<tr><td colspan="8" class="empty-state">No items.</td></tr>`;
+}
+
+function renderFinance(){
+  document.getElementById('finance-kpi-row').innerHTML=`
+    <div class="stat-card accent"><div class="stat-label">Total Sales (Apr)</div><div class="stat-value">IDR 48M</div><div class="stat-sub">↑ 12% MoM</div></div>
+    <div class="stat-card green"><div class="stat-label">Actual Received</div><div class="stat-value">IDR 41M</div></div>
+    <div class="stat-card blue"><div class="stat-label">KPI Target</div><div class="stat-value">IDR 55M</div></div>
+    <div class="stat-card orange"><div class="stat-label">Gap to KPI</div><div class="stat-value">IDR 7M</div></div>`;
+  document.getElementById('finance-tbody').innerHTML = DB.finance.map(r=>`
+    <tr>
+      <td class="primary">${r.channel}</td><td>${r.gross}</td><td>${r.received}</td>
+      <td>${r.diff}</td><td>${r.kpi}</td><td>${statusTag(r.pct.replace('%','')>90?'OK':f.pct.replace('%','')>80?'Pending':'Low')}<span style="margin-left:4px;font-size:10px">${r.pct}</span></td>
+    </tr>`).join('');
+}
+
+// init all
+function renderAll(){ renderLogistics(); renderAgenda(); renderCalendar(); renderPreorder(); renderInventory(); renderFinance(); }
+
+// ══════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════
+function deleteRow(table, id){
+  if(!confirm('Delete this item?')) return;
+  DB[table] = DB[table].filter(r=>r.id!==id);
+  rerenderTable(table);
+}
+
+function rerenderTable(table){
+  if(table==='logistics') renderLogistics(logisticsFilter);
+  else if(table==='agenda') renderAgenda();
+  else if(table==='calendar') renderCalendar();
+  else if(table==='preorder') renderPreorder();
+  else if(table==='inventory') renderInventory();
+  else if(table==='finance') renderFinance();
+}
+
+// ══════════════════════════════════════
+//  MODAL FORMS
+// ══════════════════════════════════════
+const FORMS = {
+  logistics: {
+    title: 'Shipment',
+    fields: [
+      {key:'tracking',label:'Tracking No.',type:'text',placeholder:'KR240501-01'},
+      {key:'contents',label:'Contents',type:'text',placeholder:'MLB SS25 / Matin Kim'},
+      {row:true, fields:[
+        {key:'boxes',label:'Boxes',type:'number',placeholder:'0'},
+        {key:'departed',label:'Departed',type:'text',placeholder:'May 1'}
+      ]},
+      {row:true, fields:[
+        {key:'eta',label:'ETA',type:'text',placeholder:'May 8'},
+        {key:'status',label:'Status',type:'select',options:['In Transit','Customs','Delivered']}
+      ]}
+    ]
+  },
+  agenda: {
+    title: 'Agenda Task',
+    fields: [
+      {key:'task',label:'Task',type:'text',placeholder:'Task description'},
+      {row:true, fields:[
+        {key:'brand',label:'Brand',type:'text',placeholder:'MLB'},
+        {key:'assignee',label:'Assignee',type:'text',placeholder:'Name'}
+      ]},
+      {row:true, fields:[
+        {key:'team',label:'Team',type:'select',options:['KR','ID']},
+        {key:'priority',label:'Priority',type:'select',options:['Urgent','High','Normal']}
+      ]},
+      {row:true, fields:[
+        {key:'due',label:'Due Date',type:'text',placeholder:'May 10'},
+        {key:'status',label:'Status',type:'select',options:['Not Started','In Progress','On Track','Overdue','Done']}
+      ]}
+    ]
+  },
+  calendar: {
+    title: 'Upload Schedule',
+    fields: [
+      {row:true,fields:[
+        {key:'brand',label:'Brand',type:'text',placeholder:'MLB'},
+        {key:'channel',label:'Channel',type:'text',placeholder:'Shopee ID'}
+      ]},
+      {key:'content',label:'Content Type',type:'text',placeholder:'Summer Campaign'},
+      {row:true,fields:[
+        {key:'skus',label:'SKUs',type:'number',placeholder:'0'},
+        {key:'date',label:'Date',type:'text',placeholder:'May 10'}
+      ]},
+      {key:'status',label:'Status',type:'select',options:['Scheduled','Today','Upcoming','Pending','Done']}
+    ]
+  },
+  preorder: {
+    title: 'Pre-order',
+    fields: [
+      {row:true,fields:[
+        {key:'orderId',label:'Order ID',type:'text',placeholder:'PO-240501-01'},
+        {key:'brand',label:'Brand',type:'text',placeholder:'MLB'}
+      ]},
+      {key:'item',label:'Item',type:'text',placeholder:'Item name'},
+      {row:true,fields:[
+        {key:'qty',label:'Quantity',type:'number',placeholder:'0'},
+        {key:'unitPrice',label:'Unit Price',type:'text',placeholder:'KRW 45,000'}
+      ]},
+      {row:true,fields:[
+        {key:'total',label:'Total',type:'text',placeholder:'KRW 2,250,000'},
+        {key:'status',label:'Status',type:'select',options:['Pending','Confirmed','Shipped']}
+      ]}
+    ]
+  },
+  inventory: {
+    title: 'Inventory Item',
+    fields: [
+      {key:'sku',label:'SKU',type:'text',placeholder:'MLB-CAP-001-BK'},
+      {row:true,fields:[
+        {key:'brand',label:'Brand',type:'text',placeholder:'MLB'},
+        {key:'item',label:'Item Name',type:'text',placeholder:'NY Yankees Cap'}
+      ]},
+      {row:true,fields:[
+        {key:'size',label:'Size',type:'text',placeholder:'Free / M / L'},
+        {key:'stock',label:'Stock Qty',type:'number',placeholder:'0'}
+      ]},
+      {row:true,fields:[
+        {key:'reorder',label:'Reorder Point',type:'number',placeholder:'5'},
+        {key:'status',label:'Status',type:'select',options:['OK','Low','Out']}
+      ]}
+    ]
+  }
+};
+
+function buildFormHTML(formDef, data={}){
+  return formDef.fields.map(f => {
+    if(f.row){
+      return `<div class="field-row">${f.fields.map(ff=>buildFieldHTML(ff,data)).join('')}</div>`;
+    }
+    return buildFieldHTML(f,data);
+  }).join('');
+}
+
+function buildFieldHTML(f, data={}){
+  const val = data[f.key]!==undefined ? data[f.key] : '';
+  if(f.type==='select'){
+    const opts = f.options.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('');
+    return `<div class="field"><label>${f.label}</label><select id="field_${f.key}">${opts}</select></div>`;
+  }
+  return `<div class="field"><label>${f.label}</label><input id="field_${f.key}" type="${f.type}" placeholder="${f.placeholder||''}" value="${val}"/></div>`;
+}
+
+function getFormData(formDef){
+  const d={};
+  function collect(fields){ fields.forEach(f=>{ if(f.row){collect(f.fields);}else{ const el=document.getElementById('field_'+f.key); d[f.key]=f.type==='number'?Number(el.value):el.value; } }); }
+  collect(formDef.fields);
+  return d;
+}
+
+let activeModalTable = null;
+
+function openAddModal(){
+  const tableMap = {
+    dashboard:'agenda', logistics:'logistics', agenda:'agenda',
+    calendar:'calendar', preorder:'preorder', inventory:'inventory', finance:'finance'
+  };
+  const table = tableMap[currentPage] || 'agenda';
+  openModalFor(table, null);
+}
+
+function openModalFor(table, id){
+  activeModalTable = table;
+  editingId = id;
+  const def = FORMS[table];
+  if(!def) return;
+  const data = id ? DB[table].find(r=>r.id===id) : {};
+  document.getElementById('modalTitle').textContent = (id?'Edit ':'Add ') + def.title;
+  document.getElementById('modalBody').innerHTML = buildFormHTML(def, data||{});
+  document.getElementById('addModal').classList.add('open');
+}
+
+function openEdit(table, id){ openModalFor(table, id); }
+
+function submitModal(){
+  const table = activeModalTable;
+  const def = FORMS[table];
+  if(!def) return;
+  const data = getFormData(def);
+  if(editingId){
+    const idx = DB[table].findIndex(r=>r.id===editingId);
+    if(idx>-1) DB[table][idx] = {...DB[table][idx], ...data};
+  } else {
+    data.id = nextId[table]++;
+    if(table==='logistics') data.timeline=[
+      {label:'Order Packed',note:'',state:'done'},
+      {label:'Departed ICN',note:data.departed,state:'active'},
+      {label:'Arrived CGK',note:'',state:'pending'},
+      {label:'Customs Clearance',note:'',state:'pending'},
+      {label:'Delivery to NoTag ID Office',note:'ETA '+data.eta,state:'pending'}
+    ];
+    DB[table].push(data);
+  }
+  closeModal('addModal');
+  rerenderTable(table);
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); editingId=null; activeModalTable=null; }
+
+// click outside modal
+document.getElementById('addModal').addEventListener('click',function(e){ if(e.target===this) closeModal('addModal'); });
+
+// ══════════════════════════════════════
+//  FILTERS
+// ══════════════════════════════════════
+function filterLogistics(f,btn){ setFilterActive(btn); renderLogistics(f); }
+function filterAgenda(f,btn){ setFilterActive(btn); renderAgenda(f); }
+function filterDashAgenda(f,btn){ setFilterActive(btn);
+  document.querySelectorAll('#dash-agenda-tbody tr').forEach(r=>{
+    if(f==='all'){r.style.display='';return;}
+    if(f==='Urgent'){r.style.display=r.querySelector('td:nth-child(4)')?.textContent.includes('Urgent')?'':'none';return;}
+    r.style.display=r.querySelector('td:nth-child(3)')?.textContent.includes(f)?'':'none';
+  });
+}
+function filterInventory(f,btn){ setFilterActive(btn); renderInventory(f); }
+function setFilterActive(btn){ btn.closest('.filter-row,.section-header').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+
+// ══════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════
+const pageConfig = {
+  dashboard: {title:'Dashboard',sections:{'sheets-hub':'Sheets Hub','logistics-stats':'Logistics Stats','agenda-list':'Agenda List'}},
+  logistics: {title:'Logistics — KR → ID',sections:{'logistics-kpi':'KPI Cards','logistics-table':'Shipment Table','logistics-timeline':'Timeline'}},
+  agenda:    {title:'Agenda Tracker',sections:{'agenda-filters':'Filter Bar','agenda-table':'Task Table'}},
+  calendar:  {title:'Upload Calendar',sections:{'upload-table':'Upload Table'}},
+  preorder:  {title:'Pre-order Manager',sections:{'preorder-table':'Order Table'}},
+  inventory: {title:'Inventory Sheet',sections:{'inventory-kpi':'KPI Cards','inventory-table':'Stock Table'}},
+  finance:   {title:'Finance / KPI',sections:{'finance-kpi':'KPI Cards','finance-table':'Channel Table'}}
+};
+const savedState={};
+Object.keys(pageConfig).forEach(p=>{ savedState[p]={hidden:new Set(),title:pageConfig[p].title}; });
+
+function navigate(page,el){
+  currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('pageTitle').value=savedState[page].title;
+  el.classList.add('active');
+  renderSheetLink(page);
+  if(document.getElementById('cpPanel').classList.contains('open')) renderCustomizePanel();
+}
+function saveTitle(){ savedState[currentPage].title=document.getElementById('pageTitle').value; }
+function liveUpdateTitle(val){ savedState[currentPage].title=val; document.getElementById('pageTitle').value=val; }
+
+// ══════════════════════════════════════
+//  CUSTOMIZE
+// ══════════════════════════════════════
+function openCustomize(){ renderCustomizePanel(); document.getElementById('cpPanel').classList.add('open'); document.getElementById('cpOverlay').classList.add('open'); }
+function closeCustomize(){ document.getElementById('cpPanel').classList.remove('open'); document.getElementById('cpOverlay').classList.remove('open'); }
+
+function renderCustomizePanel(){
+  const cfg=pageConfig[currentPage], state=savedState[currentPage];
+  document.getElementById('cpSubtitle').textContent=cfg.title;
+  document.getElementById('cpTitleInput').value=state.title;
+  document.getElementById('cpSections').innerHTML=Object.entries(cfg.sections).map(([key,label])=>{
+    const on=!state.hidden.has(key);
+    return `<div class="toggle-row"><span class="toggle-label">${label}</span>
+      <label class="toggle"><input type="checkbox" ${on?'checked':''} onchange="toggleSection('${key}',this.checked)">
+      <div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>`;
+  }).join('');
+  document.getElementById('cpPageVisibility').innerHTML=Object.entries(pageConfig).filter(([k])=>k!=='dashboard').map(([pk,pcfg])=>{
+    const hidden=document.getElementById('nav-'+pk)?.classList.contains('hidden-page');
+    return `<div class="toggle-row"><span class="toggle-label">${pcfg.title}</span>
+      <label class="toggle"><input type="checkbox" ${!hidden?'checked':''} onchange="togglePageVisibility('${pk}',this.checked)">
+      <div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>`;
+  }).join('');
+}
+
+function toggleSection(key,visible){
+  const state=savedState[currentPage];
+  const el=document.getElementById('page-'+currentPage)?.querySelector(`[data-section="${key}"]`);
+  if(visible){state.hidden.delete(key);el?.classList.remove('hidden');}
+  else{state.hidden.add(key);el?.classList.add('hidden');}
+}
+function togglePageVisibility(pk,visible){ document.getElementById('nav-'+pk)?.classList.toggle('hidden-page',!visible); }
+function setAccent(c,c2,el){
+  document.documentElement.style.setProperty('--accent',c);
+  document.documentElement.style.setProperty('--accent2',c2);
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+  document.querySelector('.logo-box').style.color=(r*299+g*587+b*114)/1000>128?'#000':'#fff';
+}
+function setDensity(mode,el){
+  document.body.classList.remove('density-compact','density-loose');
+  if(mode!=='normal') document.body.classList.add('density-'+mode);
+  document.querySelectorAll('.option-btn').forEach(b=>{if(b.textContent.match(/Compact|Normal|Loose/)) b.classList.remove('active');});
+  el.classList.add('active');
+}
+function setTheme(theme,el){
+  document.body.classList.toggle('theme-light',theme==='light');
+  document.querySelectorAll('.option-btn').forEach(b=>{if(b.textContent.match(/Dark|Light/)) b.classList.remove('active');});
+  el.classList.add('active');
+}
+function resetPage(){
+  const cfg=pageConfig[currentPage];
+  savedState[currentPage]={hidden:new Set(),title:cfg.title};
+  document.getElementById('page-'+currentPage)?.querySelectorAll('[data-section]').forEach(el=>el.classList.remove('hidden'));
+  document.getElementById('pageTitle').value=cfg.title;
+  renderCustomizePanel();
+}
+
+// ══════════════════════════════════════
+//  GOOGLE SHEETS CONFIG
+//  → Apps Script 배포 후 여기에 URL 교체
+// ══════════════════════════════════════
+const SHEETS = {
+  preorder:  { label:'발주 시트',        editUrl:'https://docs.google.com/spreadsheets/d/15W2pMtEzdBUMT8H0RTXbyanV3D_hDNpGFMiMW2nv9Fo/edit', apiUrl:'' },
+  inventory: { label:'인니 재고 시트',    editUrl:'https://docs.google.com/spreadsheets/d/1WFfTtxlZgQ-JZcP9rSA75xV83wLRJHCY_Bgoeam9JXk/edit', apiUrl:'' },
+  logistics: { label:'물류 패킹 리스트',  editUrl:'https://docs.google.com/spreadsheets/d/1A2XkJHyhU3kC91O--3O5MK_Y6aLfBSMCVDBTwZ-Rkno/edit', apiUrl:'' },
+  calendar:  { label:'마케팅 캘린더',     editUrl:'https://docs.google.com/spreadsheets/d/1NcxClmbXHCufSXd26HFa9YjJMl0pdNc6Rl4A6FYo0CE/edit', apiUrl:'' },
+  finance:   { label:'재무 KPI 시트',     editUrl:'https://docs.google.com/spreadsheets/d/1gq72JmFyfBI2kRM7XcTumAZsWz_aNxqWFn7QS0wuEVY/edit', apiUrl:'' }
+};
+
+// 페이지 → 시트 매핑
+const PAGE_SHEET = {
+  logistics:'logistics', agenda:null, calendar:'calendar',
+  preorder:'preorder', inventory:'inventory', finance:'finance', dashboard:null
+};
+
+// 시트 링크 버튼 렌더 (topbar 우측)
+function renderSheetLink(page){
+  const key = PAGE_SHEET[page];
+  const el = document.getElementById('sheetLinkBtn');
+  if(!el) return;
+  if(key && SHEETS[key]){
+    el.innerHTML = `<a href="${SHEETS[key].editUrl}" target="_blank" class="btn btn-sheet" title="${SHEETS[key].label}">
+      ↗ Open in Sheets</a>`;
+    el.style.display='';
+  } else {
+    el.style.display='none';
+  }
+}
+
+// ── 실시간 KPI 페치 (Apps Script URL 세팅 후 동작) ──
+async function fetchSheetKPI(sheetKey, parser){
+  const sheet = SHEETS[sheetKey];
+  if(!sheet || !sheet.apiUrl) return null;
+  try {
+    const res = await fetch(sheet.apiUrl);
+    const json = await res.json();
+    return parser(json.data);
+  } catch(e){ console.warn('Sheet fetch failed:', sheetKey, e); return null; }
+}
+
+// 각 시트별 KPI 파서 (컬럼명은 실제 시트 헤더에 맞게 조정)
+const PARSERS = {
+  logistics: (rows) => ({
+    inTransit: rows.filter(r=>r['Status']==='In Transit').length,
+    customs:   rows.filter(r=>r['Status']==='Customs').length,
+    delivered: rows.filter(r=>r['Status']==='Delivered').length
+  }),
+  inventory: (rows) => ({
+    total: rows.length,
+    low:   rows.filter(r=>Number(r['Stock'])>0 && Number(r['Stock'])<=Number(r['Reorder'])).length,
+    out:   rows.filter(r=>Number(r['Stock'])===0).length
+  }),
+  preorder: (rows) => ({
+    pending:   rows.filter(r=>r['Status']==='Pending').length,
+    confirmed: rows.filter(r=>r['Status']==='Confirmed').length,
+    shipped:   rows.filter(r=>r['Status']==='Shipped').length
+  }),
+  finance: (rows) => rows,
+  calendar: (rows) => ({
+    today:    rows.filter(r=>r['Status']==='Today').length,
+    upcoming: rows.filter(r=>r['Status']==='Upcoming').length
+  })
+};
+
+// Sync 버튼 클릭 시 호출
+async function syncSheets(){
+  const btn = document.querySelector('.btn[onclick*="sync"]') || document.querySelector('.btn');
+  btn && (btn.textContent='↻ Syncing…');
+
+  // Logistics KPI
+  const lData = await fetchSheetKPI('logistics', PARSERS.logistics);
+  if(lData){
+    DB.logistics._kpi = lData;
+    renderLogistics();
+  }
+
+  // Inventory KPI
+  const iData = await fetchSheetKPI('inventory', PARSERS.inventory);
+  if(iData) renderInventory();
+
+  btn && (btn.textContent='↻ Sync');
+  showSyncToast();
+}
+
+function showSyncToast(){
+  let t = document.getElementById('syncToast');
+  if(!t){ t=document.createElement('div'); t.id='syncToast';
+    t.style.cssText='position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--accent);color:var(--accent);font-family:DM Mono,monospace;font-size:10px;padding:10px 16px;border-radius:4px;z-index:999;transition:opacity .3s;';
+    document.body.appendChild(t); }
+  t.textContent='✓ Synced with Google Sheets';
+  t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0', 2500);
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+renderAll();
+renderSheetLink('dashboard');
+</script>
+</body>
+</html>
